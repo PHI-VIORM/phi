@@ -1,0 +1,6 @@
+2026-09-28T10:00:00 INFO 10.0.0.2 request completed
+2026-09-28T10:00:05 ERROR 10.0.0.8 database timeout
+2026-09-28T10:00:15 ERROR 10.0.0.8 database timeout
+2026-09-28T10:00:25 CRITICAL 10.0.0.9 service unavailable
+2026-09-28T10:02:00 INFO 10.0.0.2 service recovered
+
