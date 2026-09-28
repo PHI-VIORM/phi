@@ -9,6 +9,7 @@
 | CSV 数据质量分析器 | 统计缺失值、重复行、数值分布和疑似类型 | `python csv_profiler.py examples/sales.csv` |
 | 日志异常检测器 | 从日志中识别错误突增、异常 IP 和高频事件 | `python log_anomaly.py examples/app.log` |
 | AI Coding 任务检查器 | 检查任务描述是否具备目标、约束、验收标准和测试要求 | `python task_linter.py examples/task.md` |
+| 统一批量分析 CLI | 自动识别 CSV、LOG、Markdown，批量输出 JSON 或 HTML 报告 | `python toolkit_cli.py examples --format html` |
 
 ## 特点
 
@@ -23,6 +24,7 @@
 python csv_profiler.py examples/sales.csv
 python log_anomaly.py examples/app.log --window 60 --threshold 3
 python task_linter.py examples/task.md
+python toolkit_cli.py examples --config config.example.json --format html --output report.html
 python -m unittest discover -s tests -v
 ```
 
@@ -33,6 +35,9 @@ python -m unittest discover -s tests -v
 ├── csv_profiler.py       # CSV 数据画像与质量评分
 ├── log_anomaly.py        # 日志异常检测
 ├── task_linter.py        # AI Coding 任务描述检查
+├── toolkit/              # 配置、批量调度与报告模块
+├── toolkit_cli.py        # 统一命令行入口
+├── config.example.json   # 可调整的质量阈值配置
 ├── examples/             # 可直接运行的示例数据
 └── tests/                # 单元测试
 ```
