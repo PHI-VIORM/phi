@@ -5,6 +5,9 @@ from pathlib import Path
 from csv_profiler import profile_csv
 from log_anomaly import detect_anomalies, parse_line
 from task_linter import lint_task
+from toolkit.batch import analyze_directory, analyze_file
+from toolkit.config import load_config
+from toolkit.reporting import write_html
 
 
 class CsvProfilerTests(unittest.TestCase):
@@ -40,6 +43,39 @@ class TaskLinterTests(unittest.TestCase):
         text = "目标是实现导出功能。输入为 JSON，输出 CSV。必须处理异常。验收标准包含字段一致，并提供边界测试用例。"
         result = lint_task(text)
         self.assertGreaterEqual(result["score"], 85)
+
+
+class IntegratedToolkitTests(unittest.TestCase):
+    def test_dispatches_csv_analysis(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "data.csv"
+            path.write_text("id,value\n1,10\n", encoding="utf-8")
+            result = analyze_file(path)
+        self.assertEqual(result["kind"], "csv")
+
+    def test_batch_skips_unsupported_files(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / "task.md").write_text("目标 实现 输入 输出 必须 验收 测试 异常" * 10, encoding="utf-8")
+            (root / "image.bin").write_bytes(b"x")
+            result = analyze_directory(root)
+        self.assertEqual(result["analyzed"], 1)
+        self.assertEqual(result["skipped"], 1)
+
+    def test_config_validation(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "config.json"
+            path.write_text('{"log_window_seconds": 0}', encoding="utf-8")
+            with self.assertRaises(ValueError):
+                load_config(path)
+
+    def test_html_output_escapes_values(self):
+        with tempfile.TemporaryDirectory() as folder:
+            output = Path(folder) / "report.html"
+            write_html({"value": "<script>"}, output)
+            content = output.read_text(encoding="utf-8")
+        self.assertIn("&lt;script&gt;", content)
+        self.assertNotIn("<script>", content)
 
 
 if __name__ == "__main__":
