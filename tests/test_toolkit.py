@@ -8,6 +8,9 @@ from task_linter import lint_task
 from toolkit.batch import analyze_directory, analyze_file
 from toolkit.config import load_config
 from toolkit.reporting import write_html
+from toolkit.comparison import compare_numeric
+from toolkit.health import summarize
+from toolkit.security import scan_text
 
 
 class CsvProfilerTests(unittest.TestCase):
@@ -76,6 +79,18 @@ class IntegratedToolkitTests(unittest.TestCase):
             content = output.read_text(encoding="utf-8")
         self.assertIn("&lt;script&gt;", content)
         self.assertNotIn("<script>", content)
+
+    def test_secret_scanner_reports_line_without_exposing_value(self):
+        findings = scan_text("name=demo\napi_key=super-secret-value\n")
+        self.assertEqual(findings, [{"kind": "generic_secret", "line": 2}])
+
+    def test_report_comparison(self):
+        result = compare_numeric({"score": 70}, {"score": 88}, ["score"])
+        self.assertEqual(result["changes"]["score"]["delta"], 18)
+
+    def test_health_summary(self):
+        result = summarize({"kind": "task", "report": {"score": 90, "suggestions": []}})
+        self.assertEqual(result["status"], "healthy")
 
 
 if __name__ == "__main__":
