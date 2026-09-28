@@ -1,0 +1,6 @@
+{
+  "log_window_seconds": 60,
+  "log_error_threshold": 3,
+  "csv_quality_warning": 85
+}
+
