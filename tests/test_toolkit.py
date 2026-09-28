@@ -11,6 +11,12 @@ from toolkit.reporting import write_html
 from toolkit.comparison import compare_numeric
 from toolkit.health import summarize
 from toolkit.security import scan_text
+from toolkit.dedup import duplicate_groups
+from toolkit.diagnostics import diagnostics
+from toolkit.manifest import build_manifest
+from toolkit.metrics import percentile
+from toolkit.sampling import sample
+from toolkit.validators import validate_result
 
 
 class CsvProfilerTests(unittest.TestCase):
@@ -91,6 +97,31 @@ class IntegratedToolkitTests(unittest.TestCase):
     def test_health_summary(self):
         result = summarize({"kind": "task", "report": {"score": 90, "suggestions": []}})
         self.assertEqual(result["status"], "healthy")
+
+    def test_result_validation(self):
+        self.assertEqual(validate_result({"kind": "csv", "report": {}}), [])
+        self.assertEqual(len(validate_result({"kind": "unknown"})), 2)
+
+    def test_percentile_interpolation(self):
+        self.assertEqual(percentile([0, 10, 20], 75), 15)
+
+    def test_sampling_is_reproducible(self):
+        self.assertEqual(sample(list(range(20)), 5, seed=7), sample(list(range(20)), 5, seed=7))
+
+    def test_duplicate_groups_keep_row_numbers(self):
+        rows = [{"id": 1}, {"id": 2}, {"id": 1}]
+        self.assertEqual(duplicate_groups(rows, ["id"]), [{"key": [1], "rows": [1, 3]}])
+
+    def test_manifest_hashes_files(self):
+        with tempfile.TemporaryDirectory() as folder:
+            Path(folder, "a.txt").write_text("hello", encoding="utf-8")
+            manifest = build_manifest(folder)
+        self.assertEqual(manifest[0]["bytes"], 5)
+        self.assertEqual(len(manifest[0]["sha256"]), 64)
+
+    def test_diagnostics_for_error_burst(self):
+        result = diagnostics({"kind": "log", "report": {"error_bursts": [{"count": 3}]}})
+        self.assertEqual(result[0]["level"], "critical")
 
 
 if __name__ == "__main__":
